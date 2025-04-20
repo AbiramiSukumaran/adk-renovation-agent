@@ -1,0 +1,46 @@
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>gcfv2</groupId>
+	<artifactId>http</artifactId>
+	<version>0.0.1</version>
+	<name>HTTP Function</name>
+	<properties>
+		<maven.compiler.release>17</maven.compiler.release>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.google.cloud.functions</groupId>
+			<artifactId>functions-framework-api</artifactId>
+			<version>1.0.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>4.0.3</version>
+		</dependency>
+		<!-- Add the connector with the latest version -->
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>alloydb-jdbc-connector</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<!-- Add the driver with the latest version -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-vertexai</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+	</dependencies>
+</project>
