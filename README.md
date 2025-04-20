@@ -68,7 +68,7 @@ Create Cloud Run Function from here: https://console.cloud.google.com/run/create
 Set the name of the function to "**check-order-status**" and choose the "**Java 17**" as runtime. 
 You can set authentication to "Allow unauthenticated invocations" since it is a demo application.
 Follow steps in the link below to make sure your Cloud Run Function can talk to your AlloyDB data and retrieve:
-        _Go to "Create the Cloud Run Function" section in step 9 of the codelab [https://codelabs.developers.google.com/smart-shop-agent-alloydb#9](https://codelabs.developers.google.com/smart-stylist-app#9) link._
+        _Go to "Create the Cloud Run Function" section in step 9 of the codelab [https://codelabs.developers.google.com/smart-stylist-app#9](https://codelabs.developers.google.com/smart-stylist-app#9) link._
         _Follow all instructions from points 4 to 15 in that section._
 Click "Create".
 
