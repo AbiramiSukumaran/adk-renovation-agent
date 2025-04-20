@@ -55,6 +55,30 @@ from . import agent
 
 #### Go to agent.py and update the file with content from the following location:
 Refer agent.py in this repo
+Comment out the sub agent "ordering_agent" if you do not want to create a Cloud Run Function for getting order status from AlloyDB.
+
+##### But if you want to try the Ordering Agent, steps are as follows:
+
+###### Create AlloyDB cluster and instance, table and data
+To create cluster and instance, follow the step mentioned in STEP 4. Database Setup: https://codelabs.developers.google.com/smart-stylist-app#3
+To create table and insert data, run the sql statements from here: https://github.com/AbiramiSukumaran/adk-renovation-agent/blob/main/database_script.sql
+
+###### Create a Cloud Run Function in Java to extract order status information
+Create Cloud Run Function from here: https://console.cloud.google.com/run/create?deploymentType=function
+Set the name of the function to "**check-order-status**" and choose the "**Java 17**" as runtime. 
+You can set authentication to "Allow unauthenticated invocations" since it is a demo application.
+Follow steps in the link below to make sure your Cloud Run Function can talk to your AlloyDB data and retrieve:
+        _Go to "Create the Cloud Run Function" section in step 9 of the codelab [https://codelabs.developers.google.com/smart-shop-agent-alloydb#9](https://codelabs.developers.google.com/smart-stylist-app#9) link._
+        _Follow all instructions from points 4 to 15 in that section._
+Click "Create".
+
+###### Once the function is created and placeholder code loaded:
+Change the name of the Java file to "ProposalOrdersTool.java" and the class name to "ProposalOrdersTool". 
+Replace the placeholder code in ProposalOrdersTool.java & pom.xml with code from the respective files in the folder "Cloud Run Function" in this repo. 
+In line 73 of ProposalOrdersTool.java that contains the following code, replace the placeholder values with values from your configuration:
+        _String ALLOYDB_INSTANCE_NAME = "projects/<<YOUR_PROJECT_ID>>/locations/us-central1/clusters/<<YOUR_CLUSTER>>/instances/<<YOUR_INSTANCE>>";_
+
+Deploy the function and test it.
 
 #### Set up .env variables
 Set up your values for the parameters in the template .env file in this repo
