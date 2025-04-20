@@ -14,9 +14,9 @@ When your application has multiple agents working together autonomously and toge
 ## What are we building today?
 Let’s build a multiagent system to handle kitchen renovations. That’s what we’ll do. We’ll build a system with 3 agents. 
 
-Renovation Proposal Agent
-Permits and Compliance Check Agent
-Order Status Check Agent
+1. Renovation Proposal Agent
+2. Permits and Compliance Check Agent
+3. Order Status Check Agent
 
 Renovation Proposal Agent, to generate the kitchen renovation proposal document. Permits and Compliance Agent, to take care of permits and compliance and Order Status Check Agent, to check order status. We have a root agent that orchestrates these agents based on the requirement.
 
