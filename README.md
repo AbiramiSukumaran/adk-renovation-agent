@@ -18,8 +18,9 @@ Renovation Proposal Agent
 Permits and Compliance Check Agent
 Order Status Check Agent
 
-## Renovation Proposal Agent, to generate the kitchen renovation proposal document. Permits and Compliance Agent, to take care of permits and compliance and Order Status Check Agent, to check order status. We have a root agent that orchestrates these agents based on the requirement.
-Let’s dive right in!
+Renovation Proposal Agent, to generate the kitchen renovation proposal document. Permits and Compliance Agent, to take care of permits and compliance and Order Status Check Agent, to check order status. We have a root agent that orchestrates these agents based on the requirement.
+
+## Let’s dive right in!
 Let’s get started with getting the multiagent system implemented.
 
 ### Setup GCP Project
