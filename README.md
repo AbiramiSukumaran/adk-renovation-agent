@@ -35,24 +35,25 @@ Let’s get started with getting the multiagent system implemented.
 ### Set up Environment & Install ADK
 #### Create & Activate Virtual Environment (Recommended)
 From your Cloud Shell Terminal, create a Virtual Environment: 
-python -m venv .venv
+_python -m venv .venv_
 
 #### Activate the Virtual Environment:
-source .venv/bin/activate
+_source .venv/bin/activate_
 
 #### Install ADK:
-pip install google-adk
+_pip install google-adk_
 
 #### From Cloud Shell Terminal, create a directory in your desired project location:
-mkdir renovation-agent
+_mkdir renovation-agent_
 
 #### Go to Cloud Shell editor and create the following project structure by creating the files (empty to begin with):
 renovation-agent/
         __init__.py
         agent.py
         .env
+        
 #### Go to __init__.py and update with the following content:
-from . import agent
+_from . import agent_
 
 #### Go to agent.py and update the file with content from the following location:
 Refer agent.py in this repo
@@ -91,8 +92,8 @@ Here is how you can do it: https://cloud.google.com/storage/docs/creating-bucket
 
 ### Execute
 You can run the following to test it in the terminal:
-adk run .
+_adk run ._
 
 You can run the following to test it in an ADK provisioned UI:
-adk web
+_adk web_
 
