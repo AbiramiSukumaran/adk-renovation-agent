@@ -1,5 +1,4 @@
 import os
-#from agents import Agent
 from google.adk.agents import Agent
 from google.adk.tools import ToolContext
 from google.adk.agents.callback_context import CallbackContext
@@ -14,7 +13,7 @@ from google.adk.sessions import Session
 from google.adk.events import Event
 import random
 import vertexai
-from vertexai.preview import reasoning_engines
+from vertexai.preview.reasoning_engines import AdkApp
 from google.cloud import storage
 from google.genai.types import Blob
 from google.genai.types import Part
@@ -30,6 +29,7 @@ import json
 from dotenv import load_dotenv
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from vertexai import agent_engines
 load_dotenv()
 
 warnings.filterwarnings("ignore")
@@ -40,7 +40,7 @@ GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
 GOOGLE_GENAI_USE_VERTEXAI=os.environ["GOOGLE_GENAI_USE_VERTEXAI"]
 CHECK_ORDER_STATUS_ENDPOINT = os.environ["CHECK_ORDER_STATUS_ENDPOINT"]
 STAGING_BUCKET = "gs://" + STORAGE_BUCKET
-ROOT_AGENT_NAME = "renovation_agent"
+ROOT_AGENT_NAME = "adk_renovation_agent"
 PROJECT_ID = GOOGLE_CLOUD_PROJECT
 staging_bucket = STAGING_BUCKET
 logger = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ def get_contract_from_gcs(contract_file_name: str, tool_context: ToolContext) ->
    tool_context.state['contract_text'] = pdf_text
    return pdf_text
 
-def store_pdf(pdf_text: str) -> None:
+def store_pdf(pdf_text: str) -> str:
     """Writes text to a PDF file, then uploads it to Google Cloud Storage.
     Args:
         text: The text to write to the PDF.
@@ -289,7 +289,7 @@ def store_pdf(pdf_text: str) -> None:
     finally:
         if 'pdf_buffer' in locals():
             pdf_buffer.close() #Close the buffer
-
+    return "Successfully uploaded PDF to GCS!!"
 
 def get_suppliers_data() -> str:
     ordering_data =  """
@@ -337,38 +337,9 @@ def get_ordering_data(tool_context: ToolContext) -> str:
 Tools Definition Ends
 '''
 
-
-'''
-Defining children agents permits_agent and ordering_agent 
-followed by the orchestration agent root_agent that 
-controls the flow with instructions, tools, 
-children agents and the context state.
-'''
-
-
-'''
-# Proposal Agent Definition
-'''
-proposal_agent = Agent(
-   model=MODEL_NAME,
-   name="proposal_agent",
-   description="Agent that creates the kitchen renovation proposal pdf for the customer based on a few details that the user provides about the renovation request.",
-   instruction="""
-   You are a home renovation proposal document  generator agent that helps with creating 
-   the renovation proposal document with the following details from the user:
-   1) the necessary renovation requirement from the user
-   2) preference for contractor location (optional)
-   3) budget constraints (optional)
-   Do not ask any other questions to the user. Use the infomration in the template for filling details taht you don't know.
-   After clarifiying the user's intent on the options, generate the PDF file content for the renovation proposal. 
-   Then upload the content as a pdf file in a Cloud Storage Bucket using the tool "store_pdf"  
-   Once the proposal document pdf content is created and uploaded in the Cloud Storage Bucket,
-   confirm to the user that the proposal document has been created and uploaded to the Cloud Storage Bucket defined.
-   Here is a sample content for the proposal document, use this as a reference and create the one 
-   that matches the user requirements :
-   *****************************Sample Proposal Document Template***********
-
-    PROPOSAL DOCUMENT 
+sample_proposal = """
+*****************************Sample Proposal Document Template***********
+PROPOSAL DOCUMENT 
 This proposal is made and entered into this 16th day of March, 2025, by and between:
 Homeowner: Alice Smith, residing at 123 Main Street, Anytown, CA 91234
 Contractor: Bob's Renovations, Inc., a California corporation, with its principal place of
@@ -494,6 +465,59 @@ with some variation.
 Lighting: Recessed ceiling lights and under-cabinet lighting.
    *************************************************************************
 
+   """
+
+root_agent_system_instruction = """
+    You are a proposal , permits and ordering agent for executing and managing the kitchen renovation proposal for a home owner. 
+    You are tasked with:
+
+    1. Creating Proposal Document if the user doesn't have one already.
+    2. Creating permits and compliance documentation.
+    3. Creating a material list for ordering along with quality control checklists.
+    4. Placing orders and tracking the status of materials delivery.
+
+    Here's how you should operate:
+
+    - First, greet the user and ask them what they need help with. Provide a brief overview of your capabilities.
+    - Clarify the user's intent. If the user is unclear, ask clarifying questions.
+    - The user will ask you to create a proposal document or will directly provide the proposal document. 
+    - If the user provides the proposal document, using the corresponding subagent you will be able to extract the doc and its content.
+    - If the user asks you to create a proposal document then you need to go to the corresponding sub-agent to create proposal document.
+    - Based on the user's intent, determine which sub-agent is best suited to handle the request.
+    - Then follow the instructions below. Ultimately your goal is to route the user's request to the appropriate sub-agent and 
+      ensure that the task is completed successfully.
+    """
+
+
+
+'''
+Defining children agents permits_agent and ordering_agent 
+followed by the orchestration agent root_agent that 
+controls the flow with instructions, tools, 
+children agents and the context state.
+'''
+
+
+'''
+# Proposal Agent Definition
+'''
+proposal_agent = Agent(
+   model=MODEL_NAME,
+   name="proposal_agent",
+   description="Agent that creates the kitchen renovation proposal pdf for the customer based on a few details that the user provides about the renovation request.",
+   instruction= f"""
+   You are a home renovation proposal document  generator agent that helps with creating 
+   the renovation proposal document with the following details from the user:
+   1) the necessary renovation requirement from the user
+   2) preference for contractor location (optional)
+   3) budget constraints (optional)
+   Do not ask any other questions to the user. Use the infomration in the template for filling details taht you don't know.
+   After clarifiying the user's intent on the options, generate the PDF file content for the renovation proposal. 
+   Then upload the content as a pdf file in a Cloud Storage Bucket using the tool "store_pdf"  
+   Once the proposal document pdf content is created and uploaded in the Cloud Storage Bucket,
+   confirm to the user that the proposal document has been created and uploaded to the Cloud Storage Bucket defined.
+   Here is a sample content for the proposal document, use this as a reference and create the one 
+   that matches the user requirements : {sample_proposal}
    """,
    generate_content_config=types.GenerateContentConfig(temperature=0.2),
    tools=[store_pdf],
@@ -563,26 +587,6 @@ ordering_agent = Agent(
    ],
 )
 
-root_agent_system_instruction = """
-    You are a proposal , permits and ordering agent for executing and managing the kitchen renovation proposal for a home owner. 
-    You are tasked with:
-
-    1. Creating Proposal Document if the user doesn't have one already.
-    2. Creating permits and compliance documentation.
-    3. Creating a material list for ordering along with quality control checklists.
-    4. Placing orders and tracking the status of materials delivery.
-
-    Here's how you should operate:
-
-    - First, greet the user and ask them what they need help with. Provide a brief overview of your capabilities.
-    - Clarify the user's intent. If the user is unclear, ask clarifying questions.
-    - The user will ask you to create a proposal document or will directly provide the proposal document. 
-    - If the user provides the proposal document, using the corresponding subagent you will be able to extract the doc and its content.
-    - If the user asks you to create a proposal document then you need to go to the corresponding sub-agent to create proposal document.
-    - Based on the user's intent, determine which sub-agent is best suited to handle the request.
-    - Then follow the instructions below. Ultimately your goal is to route the user's request to the appropriate sub-agent and 
-      ensure that the task is completed successfully.
-    """
 
 
 '''
@@ -611,7 +615,7 @@ root_agent = Agent(
     **********************************************************************************************************
    """),
 
-    #generate_content_config=types.GenerateContentConfig(temperature=0.2),
+    generate_content_config=types.GenerateContentConfig(temperature=0.2),
 
     # Orchestrating sub agents
     sub_agents=[
@@ -621,3 +625,51 @@ root_agent = Agent(
     ],
 )
 
+
+'''
+# Agent Engine Deployment:
+# Create a remote app for our multiagent with agent Engine.
+# This may take 1-2 minutes to finish.
+# Uncomment the below segment when you're ready to deploy it to Agent Engine
+
+app = AdkApp(
+    agent=root_agent,
+    enable_tracing=True,
+)
+
+vertexai.init(
+    project=PROJECT_ID,
+    location=GOOGLE_CLOUD_LOCATION,
+    staging_bucket=STAGING_BUCKET,
+)
+
+remote_app = agent_engines.create(
+    app,
+    requirements=[
+        "google-cloud-aiplatform[agent_engines,adk]>=1.88",
+        "google-adk",
+        "pysqlite3-binary",
+        "toolbox-langchain==0.1.0",
+        "pdfplumber",
+        "google-cloud-aiplatform",
+        "cloudpickle==3.1.1",
+        "pydantic==2.10.6",
+        "pytest",
+        "overrides",
+        "scikit-learn",
+        "reportlab",
+        "google-auth",
+        "google-cloud-storage",
+    ],
+)
+
+# Deployment to Agent Engine related code ends
+
+# Example response:
+# ...
+# To use this deployed ReasoningEngine in another session:
+# reasoning_engine = vertexai.preview.reasoning_engines.
+# ReasoningEngine('projects/123456789/locations/us-central1/reasoningEngines/123456')
+
+agent_engine = vertexai.agent_engines.get('projects/233708879341/locations/us-central1/reasoningEngines/4232125808426090496')
+'''
